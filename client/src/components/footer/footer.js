@@ -19,27 +19,34 @@ function Footer() {
                         in India by{" "}
                         <a
                             className="footer-name"
-                            href="https://github.com/aastha985"
+                            href="https://github.com/SAGAR-SINGH02"
                         >
-                            Aastha
+                            Sagar
                         </a>
                         ,{" "}
                         <a
                             className="footer-name"
-                            href="https://github.com/agrim19"
+                            href="https://github.com/raj9229"
                         >
-                            Agrim
+                            Raj
+                        </a>
+                        ,{" "}
+                        <a
+                            className="footer-name"
+                            href="https://github.com/anuranjansrivastava"
+                        >
+                            Anuranjan
                         </a>{" "}
                         and{" "}
                         <a
                             className="footer-name"
-                            href="https://github.com/tushar19340"
+                            href="https://github.com/Nikhilpratap123"
                         >
-                            Tushar
+                            Nikhil 
                         </a>
                     </Col>
                     <Col className="footer-text-copyright">
-                        Copyright © 2021 | TaxChain
+                        Copyright not allowed | TaxChain
                     </Col>
                 </Row>
             </Container>

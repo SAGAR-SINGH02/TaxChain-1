@@ -1,84 +1,111 @@
-import React, { Component, useContext, useState, useEffect } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './App.css';
-import Home from './pages/home/home.js';
-import SignUp from './pages/forms/signup';
-import Login from './pages/forms/login';
-import Citizen from './pages/citizen/citizen';
-import GovtDashboard from './pages/government/government.js';
-import Constituency from './pages/constituency/consituency.js';
-import Contractor from './pages/contractor/contractor.js';
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
-import getWeb3 from './getWeb3';
-import Web3JS from './services/context';
-import { AuthProvider } from './pages/contexts/AuthContext';
+import React, { useState } from 'react';
+import { ethers } from 'ethers';
+import axios from 'axios';
+import TaxChainABI from './TaxChainABI.json';
+import Chatbot from './components/Chatbot'; // Ensure this component exists
+
+const contractAddress = "0x2d3DAEd9279841e7A8e0000D87f7aEAe72BEe445"; // Replace with actual contract address
 
 function App() {
-    const [loaded, setLoaded] = useState(false);
-    const [web3, setWeb3] = useState({});
-    const [accounts, setAccounts] = useState({});
-    const [networkId, setNetworkId] = useState({});
+  const [amount, setAmount] = useState('');
+  const [file, setFile] = useState(null);
+  const [status, setStatus] = useState('');
 
-    useEffect(() => {
-        const handler = async () => {
-            let Web3 = await getWeb3();
-            setWeb3(Web3);
-            let Accounts = await Web3.eth.getAccounts();
-            setAccounts(Accounts);
-            let NetworkId = await Web3.eth.net.getId();
-            setNetworkId(NetworkId);
-        };
-        try {
-            handler();
-            setLoaded(true);
-        } catch (error) {
-            alert(
-                `Failed to load web3, accounts, or contract. Check console for details.`
-            );
-            console.error(error);
-        }
-    }, []);
-
-    if (!loaded) {
-        return <div>Loading Web3, accounts, and contract...</div>;
+  const uploadToIPFS = async () => {
+    if (!file) {
+      setStatus("❌ No file selected");
+      return null;
     }
-    return (
-        <>
-            <AuthProvider>
-                <Renderer web3={web3} />
-            </AuthProvider>
-        </>
-    );
-}
 
-function Renderer(params) {
-    return (
-        <Router>
-            <div className='App'>
-                <Switch>
-                    <Route path='/' exact component={Home}></Route>
-                    <Route path='/signup' component={SignUp}></Route>
-                    <Route path='/login' component={Login}></Route>
-                    <Route
-                        path='/citizen'
-                        render={() => <Citizen web3={params.web3} />}
-                    ></Route>
-                    <Route
-                        path='/government/'
-                        render={() => <GovtDashboard web3={params.web3} />}
-                    ></Route>
-                    <Route
-                        path='/constituency'
-                        render={() => <Constituency web3={params.web3} />}
-                    ></Route>
-                    <Route
-                        path='/contractor'
-                        render={() => <Contractor web3={params.web3} />}
-                    ></Route>
-                </Switch>
-            </div>
-        </Router>
-    );
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await axios.post('https://api.web3.storage/upload', formData, {
+        headers: {
+          Authorization: `Bearer ${process.env.REACT_APP_WEB3_STORAGE_TOKEN}`,
+        },
+      });
+      return res.data.cid;
+    } catch (error) {
+      console.error("IPFS Upload Failed:", error);
+      setStatus("❌ IPFS upload failed");
+      return null;
+    }
+  };
+
+  const fileTax = async () => {
+    if (!window.ethereum) return alert("Please install MetaMask");
+
+    const fileHash = await uploadToIPFS();
+    if (!fileHash) return;
+
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const contract = new ethers.Contract(contractAddress, TaxChainABI, signer);
+
+    try {
+      const tx = await contract.fileTax(
+        ethers.utils.parseEther(amount),
+        fileHash
+      );
+      await tx.wait();
+      setStatus("✅ Tax filed successfully with IPFS record!");
+    } catch (error) {
+      console.error("Tax filing failed:", error);
+      setStatus("❌ Tax filing failed");
+    }
+  };
+
+  const requestRefund = async () => {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const contract = new ethers.Contract(contractAddress, TaxChainABI, signer);
+
+    try {
+      const tx = await contract.requestRefund();
+      await tx.wait();
+      setStatus("✅ Refund requested!");
+    } catch (error) {
+      console.error("Refund failed:", error);
+      setStatus("❌ Refund request failed");
+    }
+  };
+
+  return (
+    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
+      <h1>💸 TaxChain Filing DApp</h1>
+      
+      <input
+        type="text"
+        placeholder="Enter amount in ETH"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        style={{ padding: '8px', width: '250px', marginBottom: '10px' }}
+      /><br />
+
+      <input
+        type="file"
+        onChange={(e) => setFile(e.target.files[0])}
+        style={{ marginBottom: '10px' }}
+      /><br />
+
+      <button onClick={fileTax} style={{ marginRight: '10px' }}>📂 File Tax</button>
+      <button onClick={requestRefund}>💰 Request Refund</button>
+
+      <p>Status: {status}</p>
+
+      {/* Chatbot Embed */}
+      <iframe
+        title="TaxChain Chatbot"
+        width="350"
+        height="500"
+        allow="microphone;"
+        src="https://console.dialogflow.com/api-client/demo/embedded/YOUR_DIALOGFLOW_BOT_ID"
+        style={{ border: 'none', marginTop: '20px' }}
+      />
+    </div>
+  );
 }
 
 export default App;

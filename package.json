@@ -1,29 +1,20 @@
 {
-  "name": "taxchain",
+  "name": "taxchain-smart-contract",
   "version": "1.0.0",
-  "description": "",
-  "main": "truffle-config.js",
-  "directories": {
-    "test": "test"
+  "description": "TaxChain Blockchain-based Tax Filing DApp",
+  "scripts": {
+    "test": "truffle test",
+    "migrate": "truffle migrate --reset",
+    "compile": "truffle compile"
+  },
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "dotenv": "^16.3.1"
   },
   "dependencies": {
-    "chai-as-promised": "^7.1.1",
-    "chai": "^4.3.4",
-    "chai-bn": "^0.2.1"
-  },
-  "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/agrim19/TaxChain.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/agrim19/TaxChain/issues"
-  },
-  "homepage": "https://github.com/agrim19/TaxChain#readme"
+    "@truffle/hdwallet-provider": "^2.1.7",
+    "truffle": "^5.9.0",
+    "web3": "^1.10.0"
+  }
 }
